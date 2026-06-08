@@ -1,0 +1,67 @@
+import logging
+from datetime import datetime, timedelta, timezone
+
+import httpx
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+from app.core.config import get_settings
+from app.db.session import SessionLocal
+from app.repositories.health_check_repository import HealthCheckRepository
+from app.repositories.service_repository import ServiceRepository
+from app.services.health_check_service import perform_health_check
+
+logger = logging.getLogger(__name__)
+_scheduler: AsyncIOScheduler | None = None
+
+
+async def execute_healthchecks() -> None:
+    settings = get_settings()
+    service_repository = ServiceRepository()
+    check_repository = HealthCheckRepository()
+
+    with SessionLocal() as db:
+        services = service_repository.list_active(db)
+
+    if not services:
+        logger.info("No active services to check")
+        return
+
+    timeout = httpx.Timeout(settings.HEALTHCHECK_TIMEOUT_SECONDS)
+    async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
+        for service in services:
+            result = await perform_health_check(service, client, settings)
+            with SessionLocal() as db:
+                check_repository.create(db, result)
+            logger.info(
+                "Healthcheck completed service_id=%s status=%s response_time_ms=%s",
+                service.id,
+                result["status"].value,
+                result["response_time_ms"],
+            )
+
+
+def start_healthcheck_scheduler() -> None:
+    global _scheduler
+    settings = get_settings()
+    if _scheduler and _scheduler.running:
+        return
+    _scheduler = AsyncIOScheduler(timezone="UTC")
+    _scheduler.add_job(
+        execute_healthchecks,
+        trigger="interval",
+        seconds=settings.HEALTHCHECK_INTERVAL_SECONDS,
+        id="sentinel_healthchecks",
+        max_instances=1,
+        coalesce=True,
+        next_run_time=datetime.now(timezone.utc) + timedelta(seconds=5),
+    )
+    _scheduler.start()
+    logger.info("Healthcheck worker started interval_seconds=%s", settings.HEALTHCHECK_INTERVAL_SECONDS)
+
+
+def stop_healthcheck_scheduler() -> None:
+    global _scheduler
+    if _scheduler and _scheduler.running:
+        _scheduler.shutdown(wait=False)
+        logger.info("Healthcheck worker stopped")
+    _scheduler = None
