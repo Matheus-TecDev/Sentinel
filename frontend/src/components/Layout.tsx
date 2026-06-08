@@ -2,6 +2,7 @@ import { Activity, ChevronLeft, Gauge, LogOut, Server, Shield, Users } from "luc
 import { useState, type ReactNode } from "react";
 
 import { useAuth } from "../auth/AuthContext";
+import { userRoleLabel } from "../utils";
 
 interface LayoutProps {
   children: ReactNode;
@@ -107,10 +108,10 @@ export function Layout({ children, currentPath, navigate }: LayoutProps) {
           </div>
           <div className="topbar-actions">
             <div className="user-pill">
-              <span>{user?.name}</span>
-              <strong>{user?.role}</strong>
+              <span>Olá, {user?.name}</span>
+              <strong>{userRoleLabel(user?.role ?? "")}</strong>
             </div>
-            <button className="icon-button" onClick={handleLogout} title="Sair" type="button">
+            <button className="logout-button" onClick={handleLogout} title="Sair" aria-label="Sair" type="button">
               <LogOut size={18} aria-hidden="true" />
             </button>
           </div>
