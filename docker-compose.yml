@@ -99,6 +99,28 @@ services:
     networks:
       - sentinel_internal
 
+  loki:
+    image: grafana/loki:2.9.8
+    command:
+      - "-config.file=/etc/loki/loki-config.yml"
+    volumes:
+      - ./infra/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - sentinel_loki_data:/loki
+    networks:
+      - sentinel_internal
+
+  promtail:
+    image: grafana/promtail:2.9.8
+    command:
+      - "-config.file=/etc/promtail/promtail-config.yml"
+    volumes:
+      - ./infra/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    networks:
+      - sentinel_internal
+
   grafana:
     image: grafana/grafana:11.3.1
     environment:
@@ -114,6 +136,7 @@ services:
       - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
+      - loki
     networks:
       - sentinel_internal
 
@@ -121,6 +144,7 @@ volumes:
   sentinel_postgres_data:
   sentinel_prometheus_data:
   sentinel_grafana_data:
+  sentinel_loki_data:
 
 networks:
   sentinel_internal:

@@ -39,6 +39,8 @@ Sentinel/
   infra/nginx/           configuração do proxy reverso
   infra/prometheus/      configuração de coleta de métricas
   infra/grafana/         datasource e dashboards provisionados
+  infra/loki/            configuração de armazenamento de logs
+  infra/promtail/        configuração de coleta de logs dos containers
   docker-compose.yml
 ```
 
@@ -71,9 +73,12 @@ Infra:
 - Nginx
 - Prometheus
 - Grafana
+- Loki
+- Promtail
 - Volume persistente para PostgreSQL
 - Volume persistente para Prometheus
 - Volume persistente para Grafana
+- Volume persistente para Loki
 
 ## Execução com Docker
 
@@ -274,6 +279,8 @@ O dashboard inicial mostra:
 - Latência P95 por rota.
 - Uso de CPU do processo.
 - Memória residente do processo.
+- Volume de logs por serviço.
+- Logs recentes do backend.
 
 Queries principais usadas no dashboard:
 
@@ -305,6 +312,62 @@ rate(process_cpu_seconds_total{job="sentinel-backend"}[5m])
 process_resident_memory_bytes{job="sentinel-backend"}
 ```
 
+## Logs com Loki e Promtail
+
+O Loki armazena logs dos containers Docker em um volume persistente local. Ele fica disponível apenas na rede interna do Docker Compose e é acessado pelo Grafana pelo endereço:
+
+```text
+http://loki:3100
+```
+
+O Promtail coleta os logs dos containers via Docker socket e envia para o Loki. Os logs recebem labels úteis para consulta:
+
+- `container`: nome do container.
+- `compose_service`: serviço do Docker Compose.
+- `compose_project`: projeto do Docker Compose.
+- `stream`: origem do fluxo coletado pelo Promtail.
+
+O datasource `Sentinel Loki` é provisionado automaticamente no Grafana em `infra/grafana/provisioning/datasources/prometheus.yml`.
+
+Para acessar os logs:
+
+1. Abra http://localhost:3000.
+2. Acesse Explore.
+3. Selecione o datasource `Sentinel Loki`.
+4. Execute uma query LogQL.
+
+Queries LogQL básicas:
+
+```logql
+{compose_service="backend"}
+```
+
+Logs do backend.
+
+```logql
+{compose_project="sentinel"}
+```
+
+Todos os logs do projeto Sentinel.
+
+```logql
+{compose_service="backend", stream="docker"}
+```
+
+Logs do backend coletados via Docker.
+
+```logql
+{compose_project="sentinel"} |~ "(?i)error|exception|traceback|failed"
+```
+
+Logs com termos comuns de erro.
+
+```logql
+sum by (compose_service) (rate({compose_project="sentinel"}[5m]))
+```
+
+Volume de logs por serviço.
+
 ## Comandos Docker
 
 ```bash
@@ -313,12 +376,14 @@ docker compose up -d --build
 docker compose logs -f backend
 docker compose logs -f prometheus
 docker compose logs -f grafana
+docker compose logs -f loki
+docker compose logs -f promtail
 docker compose ps
 docker compose down
 docker compose down -v
 ```
 
-Use `docker compose down -v` somente quando quiser remover o volume do PostgreSQL e apagar os dados locais.
+Use `docker compose down -v` somente quando quiser remover volumes persistentes e apagar os dados locais.
 
 ## MVP atual
 
@@ -338,11 +403,13 @@ Implementado:
 - Métricas FastAPI em `/metrics`.
 - Prometheus com scrape do backend e volume persistente.
 - Grafana com datasource Prometheus e dashboard Sentinel provisionados.
+- Loki com armazenamento persistente de logs.
+- Promtail coletando logs dos containers Docker.
+- Grafana com datasource Loki e painéis de logs no dashboard Sentinel.
 
 Limitações atuais:
 
 - Ainda não há tracing distribuído.
-- Ainda não há pipeline de agregação de logs.
 - Ainda não há fluxo de redefinição de senha.
 - Ainda não há trilha granular de auditoria.
 - As verificações atuais são apenas HTTP.
@@ -351,8 +418,6 @@ Limitações atuais:
 
 Fase 2 de observabilidade:
 
-- Adicionar Loki para armazenamento de logs.
-- Adicionar Promtail para coletar logs dos containers.
 - Adicionar cAdvisor para métricas de containers.
 - Adicionar Node Exporter para métricas do host.
 - Criar dashboards para latência da API, taxa de erro, duração do worker, distribuição de status das verificações e uptime dos serviços.
