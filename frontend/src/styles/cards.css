@@ -1,0 +1,78 @@
+.stat-card,
+.panel,
+.toolbar {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.stat-card {
+  display: grid;
+  gap: 7px;
+  min-height: 150px;
+  padding: 16px;
+}
+
+.stat-card span,
+.stat-card small,
+.panel-heading span {
+  color: var(--muted);
+}
+
+.stat-card strong {
+  font-size: 1.55rem;
+  line-height: 1.1;
+}
+
+.stat-icon {
+  align-items: center;
+  background: var(--surface-muted);
+  border-radius: 8px;
+  color: var(--blue);
+  display: inline-flex;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+
+.stat-card.good .stat-icon,
+.stat-card.good strong {
+  color: var(--green);
+}
+
+.stat-card.warn .stat-icon,
+.stat-card.warn strong {
+  color: var(--amber);
+}
+
+.stat-card.bad .stat-icon,
+.stat-card.bad strong {
+  color: var(--red);
+}
+
+.stat-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.stat-link:hover {
+  text-decoration: underline;
+}
+
+.panel {
+  padding: 18px;
+}
+
+.panel-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.panel-heading h3 {
+  font-size: 1.02rem;
+  margin: 0 0 4px;
+}

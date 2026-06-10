@@ -1,0 +1,79 @@
+.stats-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.stats-grid.compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-grid.two-columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.notification-list,
+.rank-list {
+  display: grid;
+  gap: 10px;
+}
+
+.notification-item,
+.rank-list button {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 12px;
+}
+
+.notification-item {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr auto;
+}
+
+.notification-item strong,
+.rank-list span {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.notification-item span,
+.notification-item small,
+.rank-list small {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.notification-item > div:last-child {
+  text-align: right;
+}
+
+.notification-item.failed {
+  border-color: #ffd4cf;
+  background: #fffafa;
+}
+
+.rank-list button {
+  display: grid;
+  gap: 3px;
+  text-align: left;
+}
+
+.rank-list button:hover {
+  background: #f8fafb;
+}
+
+.rank-list strong {
+  color: var(--accent-strong);
+  font-size: 1.15rem;
+}

@@ -1,0 +1,82 @@
+.login-screen {
+  background: var(--sidebar);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 460px;
+  min-height: 100vh;
+}
+
+.login-visual {
+  color: white;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+  padding: 44px;
+}
+
+.login-panel {
+  align-content: center;
+  background: var(--surface);
+  display: grid;
+  gap: 22px;
+  padding: 44px;
+}
+
+.login-copy h1 {
+  font-size: 2rem;
+  line-height: 1.14;
+  margin: 0;
+  max-width: 420px;
+}
+
+.signal-board {
+  align-content: center;
+  display: grid;
+  gap: 14px;
+  margin: auto 0;
+  max-width: 620px;
+  width: 100%;
+}
+
+.signal-board span {
+  background:
+    linear-gradient(90deg, rgba(15, 118, 110, 0.95), rgba(37, 99, 235, 0.9) 50%, rgba(21, 128, 61, 0.95)),
+    #20242d;
+  border-radius: 8px;
+  display: block;
+  height: 18px;
+}
+
+.signal-board span:nth-child(2) {
+  width: 82%;
+}
+
+.signal-board span:nth-child(3) {
+  width: 64%;
+}
+
+.signal-board span:nth-child(4) {
+  width: 92%;
+}
+
+.signal-board span:nth-child(5) {
+  width: 74%;
+}
+
+.login-metrics {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.login-metrics div {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+}
+
+.login-metrics span {
+  color: #cbd5e1;
+}

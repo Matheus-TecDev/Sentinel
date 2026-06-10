@@ -1,0 +1,59 @@
+.period-selector {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  width: fit-content;
+}
+
+.period-selector button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--muted);
+  font-weight: 800;
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.period-selector button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+}
+
+.detail-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.detail-list div {
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 5px;
+  padding-bottom: 12px;
+}
+
+.detail-list dd,
+.detail-list dt {
+  margin: 0;
+}
+
+.detail-list dt {
+  color: var(--muted);
+}
+
+.detail-list dd {
+  font-weight: 700;
+}

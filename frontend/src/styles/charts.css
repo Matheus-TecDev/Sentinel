@@ -1,0 +1,13 @@
+.charts-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chart-panel {
+  min-height: 360px;
+}
+
+.wide-chart {
+  grid-column: 1 / -1;
+}

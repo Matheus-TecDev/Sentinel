@@ -1,0 +1,142 @@
+.alert-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.failure-list {
+  display: grid;
+  gap: 10px;
+}
+
+.incident-list,
+.alert-list {
+  display: grid;
+  gap: 10px;
+}
+
+.incident-item,
+.alert-item {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  cursor: pointer;
+  padding: 12px;
+}
+
+.incident-item,
+.alert-item {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr auto;
+}
+
+.incident-item strong,
+.alert-item strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.incident-item span,
+.incident-item time,
+.alert-item span,
+.alert-item small {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.incident-item > div:last-child {
+  text-align: right;
+}
+
+.alert-form {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.alert-form label {
+  color: var(--muted);
+  display: grid;
+  font-size: 0.86rem;
+  font-weight: 700;
+  gap: 7px;
+}
+
+.alert-form .check-row,
+.alert-actions {
+  grid-column: 1 / -1;
+}
+
+.alert-actions {
+  gap: 8px;
+}
+
+.failure-item {
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto 1fr auto;
+  padding: 12px;
+}
+
+.failure-item span,
+.failure-item time {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.empty-state,
+.loading,
+.error-banner {
+  align-items: center;
+  border-radius: 8px;
+  display: flex;
+  gap: 10px;
+}
+
+.empty-state {
+  background: var(--surface-muted);
+  color: var(--muted);
+  flex-direction: column;
+  justify-content: center;
+  min-height: 180px;
+  padding: 28px;
+  text-align: center;
+}
+
+.empty-state strong {
+  color: var(--ink);
+}
+
+.loading {
+  color: var(--muted);
+  justify-content: center;
+  min-height: 180px;
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+  border: 3px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  height: 24px;
+  width: 24px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-banner {
+  background: #fff1f0;
+  border: 1px solid #ffd4cf;
+  color: var(--red);
+  padding: 12px 14px;
+}

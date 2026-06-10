@@ -1,0 +1,139 @@
+.toolbar {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(240px, 1fr) repeat(3, minmax(160px, 210px));
+  padding: 12px;
+}
+
+.search-input {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.search-input input {
+  border: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+input,
+select,
+textarea {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  min-height: 40px;
+  outline: none;
+  padding: 0 11px;
+  width: 100%;
+}
+
+textarea {
+  min-height: 112px;
+  padding: 10px 11px;
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+}
+
+.sentinel-select__control {
+  border-color: var(--line) !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  min-height: 40px !important;
+  box-shadow: none !important;
+}
+
+.sentinel-select__control:hover,
+.sentinel-select__control--is-focused {
+  border-color: var(--accent) !important;
+}
+
+.sentinel-select__control--is-focused {
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14) !important;
+}
+
+.sentinel-select__menu {
+  border: 1px solid var(--line);
+  border-radius: 8px !important;
+  box-shadow: var(--shadow) !important;
+  overflow: hidden;
+  z-index: 30 !important;
+}
+
+.sentinel-select__option {
+  cursor: pointer !important;
+}
+
+.sentinel-select__option--is-focused {
+  background: var(--surface-muted) !important;
+}
+
+.sentinel-select__option--is-selected {
+  background: var(--accent) !important;
+}
+
+.sentinel-select__indicator {
+  color: var(--muted) !important;
+}
+
+.sentinel-select__indicator-separator {
+  display: none;
+}
+
+.sentinel-select__value-container {
+  cursor: pointer !important;
+}
+
+.sentinel-select__input-container {
+  color: transparent !important;
+  cursor: pointer !important;
+}
+
+.sentinel-select__control--is-focused .sentinel-select__input-container {
+  color: var(--ink) !important;
+}
+
+.form-stack,
+.form-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.form-stack label,
+.form-grid label {
+  color: var(--muted);
+  display: grid;
+  font-size: 0.86rem;
+  font-weight: 700;
+  gap: 7px;
+}
+
+.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.check-row {
+  align-items: center;
+  display: flex !important;
+  flex-direction: row;
+}
+
+.check-row input {
+  height: 18px;
+  min-height: 18px;
+  width: 18px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+}

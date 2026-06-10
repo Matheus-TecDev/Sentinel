@@ -1,0 +1,36 @@
+.app-shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.app-shell.sidebar-collapsed {
+  grid-template-columns: 74px minmax(0, 1fr);
+}
+
+.main-area {
+  min-width: 0;
+}
+
+.content {
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: 28px;
+}
+
+.page-stack {
+  display: grid;
+  gap: 20px;
+}
+
+.page-heading {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-heading h2 {
+  font-size: 1.55rem;
+  margin: 0;
+}
