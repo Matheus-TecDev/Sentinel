@@ -17,7 +17,7 @@ The platform runs scheduled HTTP checks, maintains availability history, and pro
 
 ## Problem
 
-Technical teams need to detect outages and degradation before they affect users for extended periods. Sentinela centralizes monitored-service configuration, runs automated checks, and records operational data for investigation.
+Sentinel centralizes monitored-service configuration, runs automated checks, and records operational data for investigation.
 
 ## Features
 
