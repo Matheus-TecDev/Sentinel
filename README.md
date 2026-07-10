@@ -1,128 +1,128 @@
 # Sentinela
 
-Sentinela é uma plataforma full stack para monitoramento de APIs, serviços internos e aplicações corporativas, construída com FastAPI, PostgreSQL, React, Docker e uma stack integrada de observabilidade.
+Sentinela is a full-stack monitoring platform for APIs, internal services, and business applications, built with FastAPI, PostgreSQL, React, Docker, and an integrated observability stack.
 
-O projeto executa verificações HTTP periódicas, mantém histórico de disponibilidade e oferece uma visão operacional de serviços online, degradados ou indisponíveis.
+The platform runs scheduled HTTP checks, maintains availability history, and provides an operational view of services that are online, degraded, or unavailable.
 
-## Tecnologias
+## Technology Stack
 
-| Área | Tecnologias |
+| Area | Technologies |
 | --- | --- |
 | Backend | Python, FastAPI, SQLAlchemy, Alembic, Pydantic, APScheduler, HTTPX |
 | Frontend | React, TypeScript, Vite |
-| Dados | PostgreSQL |
-| Segurança | JWT, RBAC |
-| Observabilidade | Prometheus, Grafana, Loki, Promtail, cAdvisor, Node Exporter |
-| Infraestrutura | Docker Compose, Nginx, GitHub Actions, GHCR |
+| Data | PostgreSQL |
+| Security | JWT, RBAC |
+| Observability | Prometheus, Grafana, Loki, Promtail, cAdvisor, Node Exporter |
+| Infrastructure | Docker Compose, Nginx, GitHub Actions, GHCR |
 
-## Problema
+## Problem
 
-Equipes técnicas precisam identificar indisponibilidade e degradação antes que esses problemas afetem usuários por longos períodos. O Sentinela centraliza o cadastro dos serviços monitorados, executa verificações automáticas e registra dados operacionais para investigação.
+Technical teams need to detect outages and degradation before they affect users for extended periods. Sentinela centralizes monitored-service configuration, runs automated checks, and records operational data for investigation.
 
-## Funcionalidades
+## Features
 
-- Cadastro e gerenciamento de serviços monitorados.
-- Verificações HTTP automáticas em intervalo configurável.
-- Classificação dos serviços como online, offline ou degradado.
-- Histórico persistente de verificações.
-- Abertura e resolução automática de incidentes.
-- Notificações por webhook e Discord com histórico de entrega.
-- Dashboard operacional.
-- Autenticação JWT e controle de acesso por perfil.
-- Métricas HTTP expostas para o Prometheus.
-- Dashboards provisionados no Grafana.
-- Logs centralizados com Loki e Promtail.
-- Métricas de host e containers com Node Exporter e cAdvisor.
-- Proxy reverso com Nginx.
-- Pipeline de build e publicação de imagens no GHCR.
+- Monitored-service registration and management.
+- Automated HTTP checks at configurable intervals.
+- Online, offline, and degraded service classification.
+- Persistent check history.
+- Automatic incident creation and resolution.
+- Webhook and Discord notifications with delivery history.
+- Operational dashboard.
+- JWT authentication and role-based access control.
+- HTTP metrics exposed to Prometheus.
+- Provisioned Grafana dashboards.
+- Centralized logs with Loki and Promtail.
+- Host and container metrics with Node Exporter and cAdvisor.
+- Nginx reverse proxy.
+- Image build and publishing pipeline for GHCR.
 
-## Arquitetura
+## Architecture
 
 ```text
-Usuário -> Nginx -> React
-                 -> FastAPI -> PostgreSQL
-                                |
-Worker de monitoramento --------+
+User -> Nginx -> React
+                -> FastAPI -> PostgreSQL
+                               |
+Monitoring worker --------------+
 
 Prometheus -> FastAPI + cAdvisor + Node Exporter
 Grafana    -> Prometheus + Loki
 Promtail   -> Loki
 ```
 
-## Regras de monitoramento
+## Monitoring Rules
 
-- Resposta HTTP entre `200` e `399`: serviço online.
-- Erro de rede, timeout ou resposta fora dessa faixa: serviço offline.
-- Resposta bem-sucedida acima do limite configurado: serviço degradado.
+- HTTP responses from `200` through `399`: service is online.
+- Network errors, timeouts, or responses outside that range: service is offline.
+- Successful responses above the configured latency threshold: service is degraded.
 
-Cada verificação registra o serviço, status calculado, código HTTP, tempo de resposta, mensagem de erro e data da execução.
+Each check records the service, calculated status, HTTP status code, response time, error message, and execution timestamp.
 
-## Perfis de acesso
+## Access Roles
 
-| Perfil | Permissões |
+| Role | Permissions |
 | --- | --- |
-| `ADMIN` | Gerencia usuários e serviços e acessa todas as visões operacionais |
-| `OPERATOR` | Gerencia serviços e acompanha o monitoramento |
-| `VIEWER` | Consulta dashboard, serviços e histórico |
+| `ADMIN` | Manages users and services and accesses all operational views |
+| `OPERATOR` | Manages services and monitors operations |
+| `VIEWER` | Views the dashboard, services, and history |
 
-## Como executar
+## Running Locally
 
 ```bash
 cp .env.example .env
 docker compose up -d --build
 ```
 
-URLs principais:
+Main URLs:
 
-- Aplicação: http://localhost
+- Application: http://localhost
 - API: http://localhost/api
 - Health check: http://localhost/health
-- Métricas: http://localhost/metrics
+- Metrics: http://localhost/metrics
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000
 
-O backend aplica as migrações do Alembic durante a inicialização.
+The backend applies Alembic migrations during startup.
 
 ## Endpoints
 
-| Método | Endpoint | Descrição |
+| Method | Endpoint | Description |
 | --- | --- | --- |
-| `POST` | `/api/auth/login` | Autentica o usuário |
-| `GET` | `/api/auth/me` | Retorna o usuário autenticado |
-| `GET` | `/api/users` | Lista usuários |
-| `POST` | `/api/users` | Cria um usuário |
-| `PUT` | `/api/users/{id}` | Atualiza um usuário |
-| `PATCH` | `/api/users/{id}/activation` | Ativa ou desativa um usuário |
-| `GET` | `/api/services` | Lista serviços monitorados |
-| `POST` | `/api/services` | Cadastra um serviço |
-| `GET` | `/api/services/{id}` | Detalha um serviço |
-| `PUT` | `/api/services/{id}` | Atualiza um serviço |
-| `PATCH` | `/api/services/{id}/activation` | Ativa ou desativa o monitoramento |
-| `GET` | `/api/services/{id}/checks` | Lista verificações do serviço |
-| `GET` | `/api/dashboard` | Retorna os dados operacionais |
-| `GET` | `/health` | Verifica a saúde da API |
-| `GET` | `/metrics` | Expõe métricas Prometheus |
+| `POST` | `/api/auth/login` | Authenticates a user |
+| `GET` | `/api/auth/me` | Returns the authenticated user |
+| `GET` | `/api/users` | Lists users |
+| `POST` | `/api/users` | Creates a user |
+| `PUT` | `/api/users/{id}` | Updates a user |
+| `PATCH` | `/api/users/{id}/activation` | Activates or deactivates a user |
+| `GET` | `/api/services` | Lists monitored services |
+| `POST` | `/api/services` | Registers a service |
+| `GET` | `/api/services/{id}` | Returns service details |
+| `PUT` | `/api/services/{id}` | Updates a service |
+| `PATCH` | `/api/services/{id}/activation` | Enables or disables monitoring |
+| `GET` | `/api/services/{id}/checks` | Lists service checks |
+| `GET` | `/api/dashboard` | Returns operational data |
+| `GET` | `/health` | Checks API health |
+| `GET` | `/metrics` | Exposes Prometheus metrics |
 
-## Estrutura
+## Project Structure
 
 ```text
-backend/   API, regras de negócio, persistência e worker de monitoramento
-frontend/  Dashboard operacional em React
-infra/     Nginx, Prometheus, Grafana, Loki e Promtail
-.github/   Pipeline de integração e publicação
+backend/   API, business rules, persistence, and monitoring worker
+frontend/  React operational dashboard
+infra/     Nginx, Prometheus, Grafana, Loki, and Promtail
+.github/   Integration and publishing pipeline
 ```
 
-## Documentação
+## Documentation
 
-| Documento | Conteúdo |
+| Document | Coverage |
 | --- | --- |
-| [Arquitetura](docs/architecture.md) | Componentes, persistência, inicialização e limitações |
-| [API](docs/api.md) | Endpoints, níveis de acesso e erros |
-| [Autenticação e RBAC](docs/authentication-and-rbac.md) | JWT, senhas, perfis e permissões |
-| [Regras de monitoramento](docs/monitoring-rules.md) | Scheduler, checks, incidentes e notificações |
-| [Observabilidade](docs/observability.md) | Métricas, logs, health checks e lacunas |
+| [Architecture](docs/architecture.md) | Components, persistence, initialization, and limitations |
+| [API](docs/api.md) | Endpoints, access levels, and errors |
+| [Authentication and RBAC](docs/authentication-and-rbac.md) | JWT, passwords, roles, and permissions |
+| [Monitoring rules](docs/monitoring-rules.md) | Scheduler, checks, incidents, and notifications |
+| [Observability](docs/observability.md) | Metrics, logs, health checks, and current gaps |
 
-## Validação
+## Validation
 
 ```bash
 cd backend
@@ -139,6 +139,6 @@ docker compose config
 
 ## Status
 
-**MVP concluído.**
+**MVP complete.**
 
-O primeiro escopo cobre monitoramento automático, incidentes, notificações por webhook e Discord, dashboard, RBAC, métricas, logs e execução containerizada. Tracing distribuído, SMTP e coordenação de múltiplas réplicas permanecem como evoluções futuras.
+The initial scope covers automated monitoring, incidents, webhook and Discord notifications, the operational dashboard, RBAC, metrics, logs, and containerized execution. Distributed tracing, SMTP delivery, and multi-replica coordination remain planned improvements.
