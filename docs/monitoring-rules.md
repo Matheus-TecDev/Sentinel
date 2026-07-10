@@ -1,64 +1,64 @@
-# Regras de monitoramento
+# Monitoring Rules
 
-## Agendamento
+## Scheduling
 
-O `AsyncIOScheduler` executa `execute_healthchecks` em intervalo configurado por `HEALTHCHECK_INTERVAL_SECONDS`.
+`AsyncIOScheduler` runs `execute_healthchecks` at the interval configured by `HEALTHCHECK_INTERVAL_SECONDS`.
 
-Configurações do job:
+Job configuration:
 
-- `max_instances=1`: impede sobreposição dentro do mesmo processo;
-- `coalesce=True`: consolida execuções atrasadas;
-- primeira execução aproximadamente cinco segundos após a inicialização;
-- timezone UTC.
+- `max_instances=1`: prevents overlap within the same process;
+- `coalesce=True`: consolidates delayed executions;
+- first execution approximately five seconds after startup;
+- UTC timezone.
 
-Somente serviços ativos são selecionados.
+Only active services are selected.
 
-## Execução do check
+## Check Execution
 
-Para cada serviço, o worker realiza uma requisição GET com:
+For each service, the worker performs a GET request with:
 
-- timeout definido por `HEALTHCHECK_TIMEOUT_SECONDS`;
-- redirecionamentos habilitados;
-- medição do tempo total com contador monotônico.
+- timeout defined by `HEALTHCHECK_TIMEOUT_SECONDS`;
+- redirects enabled;
+- total duration measured with a monotonic clock.
 
-## Classificação
+## Classification
 
-| Condição | Resultado |
+| Condition | Result |
 | --- | --- |
-| HTTP 200–399 e tempo dentro do limite | `online` |
-| HTTP 200–399 acima de `DEGRADED_RESPONSE_TIME_MS` | `degraded` |
-| HTTP fora de 200–399 | `offline` |
-| Timeout ou erro HTTP/rede | `offline` |
+| HTTP 200–399 within the latency threshold | `online` |
+| HTTP 200–399 above `DEGRADED_RESPONSE_TIME_MS` | `degraded` |
+| HTTP outside 200–399 | `offline` |
+| Timeout or HTTP/network error | `offline` |
 
-O resultado persiste código HTTP, latência, erro e horário.
+Each result persists the HTTP status code, latency, error, and timestamp.
 
-## Incidentes
+## Incidents
 
-Após cada check:
+After each check:
 
-- `offline` ou `degraded` sem incidente aberto cria um incidente;
-- novos resultados problemáticos atualizam o incidente aberto;
-- `online` resolve o incidente aberto e calcula sua duração;
-- `online` sem incidente aberto não produz transição.
+- an `offline` or `degraded` result without an open incident creates one;
+- subsequent problematic results update the open incident;
+- an `online` result resolves the open incident and calculates its duration;
+- an `online` result without an open incident causes no transition.
 
-Um serviço mantém, pela regra de sincronização, no máximo um incidente aberto relevante ao fluxo.
+Under the synchronization rule, a service has at most one open incident relevant to the workflow.
 
-## Notificações
+## Notifications
 
-Notificações são disparadas somente nas transições:
+Notifications are triggered only on these transitions:
 
-- abertura de incidente;
-- recuperação e resolução.
+- incident opened;
+- service recovered and incident resolved.
 
-Cada canal escolhe se deseja receber eventos de indisponibilidade, degradação e recuperação.
+Each channel selects whether it receives outage, degradation, and recovery events.
 
-Destinos implementados:
+Implemented destinations:
 
-- webhook HTTP genérico;
-- webhook do Discord.
+- generic HTTP webhook;
+- Discord webhook.
 
-O tipo e-mail existe no modelo, mas SMTP ainda não está implementado. Todas as tentativas geram `NotificationLog` com status `sent` ou `failed`.
+The email type exists in the model, but SMTP is not implemented. Every attempt creates a `NotificationLog` with `sent` or `failed` status.
 
-## Considerações operacionais
+## Operational Considerations
 
-O scheduler embutido é adequado ao MVP com uma única réplica. Para escalar horizontalmente, o monitoramento deve migrar para um worker coordenado ou sistema de filas, evitando checks duplicados.
+The embedded scheduler is suitable for a single-replica MVP. Horizontal scaling requires moving monitoring execution to a coordinated worker or queue-based system to prevent duplicate checks.
