@@ -1,82 +1,82 @@
-# Arquitetura
+# Architecture
 
-## Visão geral
+## Overview
 
-O Sentinela é organizado como uma aplicação full stack containerizada. O Nginx é o ponto de entrada, o frontend React fornece a interface operacional e a API FastAPI concentra autenticação, regras de monitoramento, incidentes e persistência.
+Sentinela is organized as a containerized full-stack application. Nginx is the entry point, the React frontend provides the operational interface, and the FastAPI backend handles authentication, monitoring rules, incidents, and persistence.
 
 ```text
-Cliente -> Nginx -> Frontend React
-                 -> API FastAPI -> PostgreSQL
-                         |
-                         +-> APScheduler -> HTTP checks
-                                           |
-                                           +-> incidentes
-                                           +-> notificações
+Client -> Nginx -> React frontend
+                  -> FastAPI API -> PostgreSQL
+                           |
+                           +-> APScheduler -> HTTP checks
+                                             |
+                                             +-> incidents
+                                             +-> notifications
 
 Prometheus -> API + cAdvisor + Node Exporter
 Grafana    -> Prometheus + Loki
 Promtail   -> Loki
 ```
 
-## Componentes
+## Components
 
-| Componente | Responsabilidade |
+| Component | Responsibility |
 | --- | --- |
-| Nginx | Ponto único de entrada e proxy reverso |
-| Frontend | Dashboard e operação dos serviços monitorados |
-| FastAPI | API, autenticação, RBAC e regras de negócio |
-| PostgreSQL | Usuários, serviços, checks, incidentes, canais e notificações |
-| APScheduler | Disparo periódico das verificações |
-| Prometheus | Coleta de métricas HTTP, host e containers |
-| Grafana | Consulta e visualização de métricas e logs |
-| Loki e Promtail | Armazenamento e coleta de logs dos containers |
-| cAdvisor | Métricas dos containers |
-| Node Exporter | Métricas do host |
+| Nginx | Single entry point and reverse proxy |
+| Frontend | Dashboard and monitored-service operations |
+| FastAPI | API, authentication, RBAC, and business rules |
+| PostgreSQL | Users, services, checks, incidents, channels, and notifications |
+| APScheduler | Scheduled check execution |
+| Prometheus | Collection of HTTP, host, and container metrics |
+| Grafana | Metrics and logs querying and visualization |
+| Loki and Promtail | Container log storage and collection |
+| cAdvisor | Container metrics |
+| Node Exporter | Host metrics |
 
-## Organização do backend
+## Backend Organization
 
 ```text
 app/
-  api/routes/     Rotas HTTP
-  core/           Configuração, segurança, enums, erros e logging
-  db/             Sessão e inicialização do banco
-  models/         Entidades SQLAlchemy
-  repositories/   Consultas e persistência
-  schemas/        Contratos Pydantic
-  services/       Regras de negócio
-  workers/        Scheduler de verificações
+  api/routes/     HTTP routes
+  core/           Configuration, security, enums, errors, and logging
+  db/             Database session and initialization
+  models/         SQLAlchemy entities
+  repositories/   Queries and persistence
+  schemas/        Pydantic contracts
+  services/       Business rules
+  workers/        Check scheduler
 ```
 
-As rotas delegam regras aos serviços; os serviços utilizam repositories para acesso ao banco. O worker chama o serviço de health check, sincroniza incidentes e aciona notificações.
+Routes delegate business rules to services; services use repositories for database access. The worker calls the health-check service, synchronizes incidents, and triggers notifications.
 
-## Inicialização
+## Initialization
 
-No lifespan da API:
+During the API lifespan:
 
-1. o logging é configurado;
-2. o administrador inicial é criado quando necessário;
-3. o scheduler é iniciado se `ENABLE_HEALTHCHECK_WORKER=true`;
-4. no encerramento, o scheduler é finalizado.
+1. logging is configured;
+2. the initial administrator is created when necessary;
+3. the scheduler starts when `ENABLE_HEALTHCHECK_WORKER=true`;
+4. the scheduler shuts down during application termination.
 
-O container do backend aplica `alembic upgrade head` antes de iniciar o Uvicorn.
+The backend container runs `alembic upgrade head` before starting Uvicorn.
 
-## Persistência
+## Persistence
 
-Principais entidades:
+Main entities:
 
-- `User`: identidade, perfil e estado de ativação;
-- `MonitoredService`: URL, ambiente, responsável e ativação;
-- `HealthCheckResult`: resultado individual de cada verificação;
-- `Incident`: período de indisponibilidade ou degradação;
-- `AlertChannel`: destino e preferências de notificação;
-- `NotificationLog`: resultado de cada tentativa de entrega.
+- `User`: identity, role, and activation state;
+- `MonitoredService`: URL, environment, owner, and activation state;
+- `HealthCheckResult`: individual result of each check;
+- `Incident`: period of outage or degradation;
+- `AlertChannel`: notification destination and preferences;
+- `NotificationLog`: result of each delivery attempt.
 
-Os checks, incidentes, canais e logs de notificação pertencem a um serviço monitorado.
+Checks, incidents, channels, and notification logs belong to a monitored service.
 
-## Limitações atuais
+## Current Limitations
 
-- O scheduler roda dentro do processo da API. Mais de uma réplica pode executar verificações duplicadas sem coordenação externa.
-- O processamento percorre os serviços ativos sequencialmente.
-- A entrega de alertas ocorre no mesmo fluxo do worker, sem fila persistente.
-- O SMTP está modelado, mas o envio de e-mail ainda não foi implementado.
-- O ambiente atual é orientado a Docker Compose; não há infraestrutura cloud declarada.
+- The scheduler runs inside the API process. Multiple replicas may execute duplicate checks without external coordination.
+- Active services are processed sequentially.
+- Alerts are delivered within the worker flow without a persistent queue.
+- SMTP is modeled, but email delivery is not implemented.
+- The current environment targets Docker Compose; cloud infrastructure is not declared.
