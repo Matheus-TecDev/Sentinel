@@ -3,9 +3,11 @@ from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
 
+from app.core.config import Settings, get_settings
 from app.core.enums import HealthStatus, IncidentStatus, NotificationEventType
 from app.models.health_check import HealthCheckResult
 from app.models.incident import Incident
+from app.repositories.health_check_repository import HealthCheckRepository
 from app.repositories.incident_repository import IncidentRepository
 
 
@@ -28,7 +30,9 @@ class IncidentTransition:
 
 
 class IncidentService:
-    def __init__(self) -> None:
+    def __init__(self, settings: Settings | None = None) -> None:
+        self.settings = settings or get_settings()
+        self.checks = HealthCheckRepository()
         self.incidents = IncidentRepository()
 
     def sync_from_check(self, db: Session, check: HealthCheckResult) -> IncidentTransition | None:
@@ -42,6 +46,13 @@ class IncidentService:
             if open_incident:
                 incident = self.incidents.update(db, open_incident, data)
                 return IncidentTransition(incident=incident, event_type=None)
+            unhealthy_count = self.checks.consecutive_unhealthy_count(
+                db,
+                service_id=check.service_id,
+                limit=self.settings.INCIDENT_FAILURE_THRESHOLD,
+            )
+            if unhealthy_count < self.settings.INCIDENT_FAILURE_THRESHOLD:
+                return None
             incident = self.incidents.create(
                 db,
                 {

@@ -36,10 +36,14 @@ Each result persists the HTTP status code, latency, error, and timestamp.
 
 After each check:
 
-- an `offline` or `degraded` result without an open incident creates one;
+- `offline` and `degraded` results count as unhealthy;
+- an incident opens when consecutive unhealthy results reach `INCIDENT_FAILURE_THRESHOLD`, which defaults to `3`;
+- an `online` result resets the consecutive unhealthy sequence;
 - subsequent problematic results update the open incident;
 - an `online` result resolves the open incident and calculates its duration;
 - an `online` result without an open incident causes no transition.
+
+`INCIDENT_FAILURE_THRESHOLD` is currently a global setting and applies to every monitored service.
 
 Under the synchronization rule, a service has at most one open incident relevant to the workflow.
 

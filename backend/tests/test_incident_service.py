@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from sqlalchemy.exc import IntegrityError
 
+from app.core.config import Settings
 from app.core.enums import HealthStatus, IncidentStatus, NotificationEventType
 from app.models.health_check import HealthCheckResult
 from app.models.incident import Incident
@@ -35,6 +36,20 @@ class FakeIncidentRepository:
         return incident
 
 
+class FakeHealthCheckRepository:
+    def __init__(self, statuses: list[HealthStatus] | None = None) -> None:
+        self.statuses = statuses or []
+
+    def consecutive_unhealthy_count(self, _db: object, service_id: int, limit: int) -> int:
+        del service_id
+        count = 0
+        for status in reversed(self.statuses[-limit:]):
+            if status == HealthStatus.ONLINE:
+                break
+            count += 1
+        return count
+
+
 class ConstraintDiagnostic:
     def __init__(self, constraint_name: str) -> None:
         self.constraint_name = constraint_name
@@ -62,8 +77,9 @@ class FailingCommitSession:
 
 @pytest.fixture
 def incident_service() -> tuple[IncidentService, FakeIncidentRepository]:
-    service = IncidentService()
+    service = IncidentService(Settings(INCIDENT_FAILURE_THRESHOLD=1, _env_file=None))
     repository = FakeIncidentRepository()
+    service.checks = FakeHealthCheckRepository([HealthStatus.OFFLINE])
     service.incidents = repository
     return service, repository
 
@@ -87,6 +103,17 @@ def make_integrity_error(constraint_name: str) -> IntegrityError:
         {},
         DatabaseError(constraint_name),
     )
+
+
+def make_threshold_service(
+    threshold: int = 3,
+) -> tuple[IncidentService, FakeIncidentRepository, FakeHealthCheckRepository]:
+    service = IncidentService(Settings(INCIDENT_FAILURE_THRESHOLD=threshold, _env_file=None))
+    incidents = FakeIncidentRepository()
+    checks = FakeHealthCheckRepository()
+    service.incidents = incidents
+    service.checks = checks
+    return service, incidents, checks
 
 
 def test_offline_result_opens_incident_and_persists_failure_context(incident_service) -> None:
@@ -216,3 +243,102 @@ def test_create_reraises_unrelated_integrity_error() -> None:
 
     assert raised.value is error
     assert session.rollback_calls == 1
+
+
+def test_third_consecutive_unhealthy_result_opens_incident() -> None:
+    service, incidents, checks = make_threshold_service()
+    started_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
+
+    checks.statuses.append(HealthStatus.OFFLINE)
+    first_transition = service.sync_from_check(object(), make_check(HealthStatus.OFFLINE, started_at))
+    checks.statuses.append(HealthStatus.DEGRADED)
+    second_transition = service.sync_from_check(
+        object(),
+        make_check(HealthStatus.DEGRADED, started_at + timedelta(minutes=1)),
+    )
+    checks.statuses.append(HealthStatus.OFFLINE)
+    third_transition = service.sync_from_check(
+        object(),
+        make_check(HealthStatus.OFFLINE, started_at + timedelta(minutes=2)),
+    )
+
+    assert first_transition is None
+    assert second_transition is None
+    assert third_transition is not None
+    assert third_transition.event_type == NotificationEventType.INCIDENT_OPENED
+    assert len(incidents.items) == 1
+
+
+def test_online_result_resets_consecutive_unhealthy_sequence() -> None:
+    service, incidents, checks = make_threshold_service()
+    started_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
+    statuses = [
+        HealthStatus.OFFLINE,
+        HealthStatus.DEGRADED,
+        HealthStatus.ONLINE,
+        HealthStatus.OFFLINE,
+        HealthStatus.DEGRADED,
+    ]
+
+    transitions = []
+    for offset, status in enumerate(statuses):
+        checks.statuses.append(status)
+        transitions.append(
+            service.sync_from_check(
+                object(),
+                make_check(status, started_at + timedelta(minutes=offset)),
+            )
+        )
+
+    assert transitions == [None, None, None, None, None]
+    assert incidents.items == []
+
+
+def test_offline_and_degraded_results_both_count_as_unhealthy() -> None:
+    service, incidents, checks = make_threshold_service()
+    checked_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
+    checks.statuses.extend([HealthStatus.DEGRADED, HealthStatus.OFFLINE, HealthStatus.DEGRADED])
+
+    transition = service.sync_from_check(object(), make_check(HealthStatus.DEGRADED, checked_at))
+
+    assert transition is not None
+    assert transition.incident.reason == "Serviço degradado"
+    assert len(incidents.items) == 1
+
+
+def test_threshold_one_opens_incident_immediately() -> None:
+    service, incidents, checks = make_threshold_service(threshold=1)
+    checked_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
+    checks.statuses.append(HealthStatus.OFFLINE)
+
+    transition = service.sync_from_check(object(), make_check(HealthStatus.OFFLINE, checked_at))
+
+    assert transition is not None
+    assert transition.event_type == NotificationEventType.INCIDENT_OPENED
+    assert len(incidents.items) == 1
+
+
+def test_existing_open_incident_updates_without_reapplying_threshold() -> None:
+    service, incidents, checks = make_threshold_service()
+    started_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
+    incident = incidents.create(
+        object(),
+        {
+            "service_id": 1,
+            "status": IncidentStatus.OPEN,
+            "started_at": started_at,
+            "reason": "Serviço offline",
+        },
+    )
+
+    transition = service.sync_from_check(
+        object(),
+        make_check(HealthStatus.DEGRADED, started_at + timedelta(minutes=1), "Slow response"),
+    )
+
+    assert checks.statuses == []
+    assert transition is not None
+    assert transition.event_type is None
+    assert transition.incident is incident
+    assert transition.incident.reason == "Serviço degradado"
+    assert transition.incident.last_error_message == "Slow response"

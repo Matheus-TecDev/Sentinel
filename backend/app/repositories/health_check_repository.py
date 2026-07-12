@@ -55,6 +55,21 @@ class HealthCheckRepository:
             statement = statement.where(HealthCheckResult.checked_at >= since)
         return list(db.execute(statement).scalars().all())
 
+    def consecutive_unhealthy_count(self, db: Session, service_id: int, limit: int) -> int:
+        statement = (
+            select(HealthCheckResult.status)
+            .where(HealthCheckResult.service_id == service_id)
+            .order_by(desc(HealthCheckResult.checked_at), desc(HealthCheckResult.id))
+            .limit(limit)
+        )
+        statuses = db.execute(statement).scalars().all()
+        count = 0
+        for status in statuses:
+            if status == HealthStatus.ONLINE:
+                break
+            count += 1
+        return count
+
     def history(self, db: Session, limit: int = 100) -> list[HealthCheckResult]:
         statement = select(HealthCheckResult).order_by(desc(HealthCheckResult.checked_at)).limit(limit)
         return list(db.execute(statement).scalars().all())

@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     HEALTHCHECK_INTERVAL_SECONDS: int = 60
     HEALTHCHECK_TIMEOUT_SECONDS: float = 5.0
     DEGRADED_RESPONSE_TIME_MS: int = 1000
+    INCIDENT_FAILURE_THRESHOLD: int = Field(default=3, ge=1)
     ENABLE_HEALTHCHECK_WORKER: bool = True
 
     INITIAL_ADMIN_NAME: str = "Sentinel Admin"
