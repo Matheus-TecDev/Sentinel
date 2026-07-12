@@ -167,7 +167,7 @@ def test_repeated_unhealthy_result_updates_existing_incident(incident_service) -
     assert second_transition is not None
     assert second_transition.event_type is None
     assert second_transition.incident is first_transition.incident
-    assert second_transition.incident.reason == "Serviço degradado"
+    assert second_transition.incident.reason == "Serviço offline"
     assert second_transition.incident.last_error_message == "Slow response"
     assert len(repository.items) == 1
 
@@ -340,5 +340,40 @@ def test_existing_open_incident_updates_without_reapplying_threshold() -> None:
     assert transition is not None
     assert transition.event_type is None
     assert transition.incident is incident
-    assert transition.incident.reason == "Serviço degradado"
+    assert transition.incident.reason == "Serviço offline"
     assert transition.incident.last_error_message == "Slow response"
+
+
+@pytest.mark.parametrize("error_message", [None, "", "   \t"])
+def test_missing_error_message_preserves_previous_concrete_detail(incident_service, error_message) -> None:
+    service, _repository = incident_service
+    started_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
+    first_transition = service.sync_from_check(
+        object(),
+        make_check(HealthStatus.OFFLINE, started_at, "Connection refused"),
+    )
+
+    second_transition = service.sync_from_check(
+        object(),
+        make_check(HealthStatus.DEGRADED, started_at + timedelta(minutes=1), error_message),
+    )
+
+    assert first_transition is not None
+    assert second_transition is not None
+    assert second_transition.incident.reason == "Serviço offline"
+    assert second_transition.incident.last_error_message == "Connection refused"
+
+
+@pytest.mark.parametrize("error_message", ["", "   \t"])
+def test_new_incident_normalizes_empty_error_message_to_none(incident_service, error_message) -> None:
+    service, _repository = incident_service
+    checked_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
+
+    transition = service.sync_from_check(
+        object(),
+        make_check(HealthStatus.OFFLINE, checked_at, error_message),
+    )
+
+    assert transition is not None
+    assert transition.incident.reason == "Serviço offline"
+    assert transition.incident.last_error_message is None

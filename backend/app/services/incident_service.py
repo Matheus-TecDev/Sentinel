@@ -23,6 +23,12 @@ def duration_seconds(started_at: datetime, resolved_at: datetime) -> int:
     return max(0, int((resolved_at - started_at).total_seconds()))
 
 
+def concrete_error_message(error_message: str | None) -> str | None:
+    if error_message is None or not error_message.strip():
+        return None
+    return error_message
+
+
 @dataclass(frozen=True)
 class IncidentTransition:
     incident: Incident
@@ -39,11 +45,9 @@ class IncidentService:
         open_incident = self.incidents.open_for_service(db, check.service_id)
 
         if check.status in (HealthStatus.OFFLINE, HealthStatus.DEGRADED):
-            data = {
-                "reason": incident_reason(check.status),
-                "last_error_message": check.error_message,
-            }
+            error_message = concrete_error_message(check.error_message)
             if open_incident:
+                data = {"last_error_message": error_message} if error_message is not None else {}
                 incident = self.incidents.update(db, open_incident, data)
                 return IncidentTransition(incident=incident, event_type=None)
             unhealthy_count = self.checks.consecutive_unhealthy_count(
@@ -59,7 +63,8 @@ class IncidentService:
                     "service_id": check.service_id,
                     "status": IncidentStatus.OPEN,
                     "started_at": check.checked_at,
-                    **data,
+                    "reason": incident_reason(check.status),
+                    "last_error_message": error_message,
                 },
             )
             return IncidentTransition(incident=incident, event_type=NotificationEventType.INCIDENT_OPENED)
