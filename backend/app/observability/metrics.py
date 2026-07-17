@@ -1,6 +1,15 @@
+import logging
+from collections.abc import Callable, Iterator
+
 from prometheus_client import REGISTRY, CollectorRegistry, Counter, Histogram
+from prometheus_client.core import GaugeMetricFamily
+from sqlalchemy.orm import Session
 
 from app.core.enums import HealthStatus
+from app.db.session import SessionLocal
+from app.repositories.incident_repository import IncidentRepository
+
+logger = logging.getLogger(__name__)
 
 
 class HealthCheckMetrics:
@@ -24,4 +33,55 @@ class HealthCheckMetrics:
         self.duration_seconds.labels(service_id=service_id_label).observe(duration_seconds)
 
 
+class OpenIncidentCollector:
+    def __init__(
+        self,
+        session_factory: Callable[[], Session],
+        repository: IncidentRepository,
+    ) -> None:
+        self._session_factory = session_factory
+        self._repository = repository
+
+    def describe(self) -> Iterator[GaugeMetricFamily]:
+        yield GaugeMetricFamily(
+            "sentinel_open_incidents",
+            "Current number of persisted open incidents.",
+        )
+
+    def collect(self) -> Iterator[GaugeMetricFamily]:
+        db: Session | None = None
+        try:
+            db = self._session_factory()
+            open_incidents = max(0, self._repository.count_open(db))
+        except Exception:
+            logger.error("Failed to collect sentinel_open_incidents")
+            return
+        finally:
+            if db is not None:
+                try:
+                    db.close()
+                except Exception:
+                    logger.error("Failed to close open incident metric database session")
+        yield GaugeMetricFamily(
+            "sentinel_open_incidents",
+            "Current number of persisted open incidents.",
+            value=open_incidents,
+        )
+
+
+def register_open_incident_collector(
+    registry: CollectorRegistry,
+    session_factory: Callable[[], Session],
+    repository: IncidentRepository,
+) -> OpenIncidentCollector:
+    collector = OpenIncidentCollector(session_factory, repository)
+    registry.register(collector)
+    return collector
+
+
 health_check_metrics = HealthCheckMetrics(REGISTRY)
+open_incident_collector = register_open_incident_collector(
+    REGISTRY,
+    SessionLocal,
+    IncidentRepository(),
+)
