@@ -35,11 +35,35 @@ class IncidentRepository:
         db.refresh(incident)
         return incident
 
+    def create_in_transaction(self, db: Session, data: dict) -> Incident:
+        incident = Incident(**data)
+        try:
+            with db.begin_nested():
+                db.add(incident)
+                db.flush()
+        except IntegrityError as error:
+            if not is_open_incident_unique_violation(error):
+                raise
+            competing_incident = self.open_for_service(db, data["service_id"])
+            if competing_incident is None:
+                raise
+            return competing_incident
+        db.refresh(incident)
+        return incident
+
     def update(self, db: Session, incident: Incident, data: dict) -> Incident:
         for key, value in data.items():
             setattr(incident, key, value)
         db.add(incident)
         db.commit()
+        db.refresh(incident)
+        return incident
+
+    def update_in_transaction(self, db: Session, incident: Incident, data: dict) -> Incident:
+        for key, value in data.items():
+            setattr(incident, key, value)
+        db.add(incident)
+        db.flush()
         db.refresh(incident)
         return incident
 

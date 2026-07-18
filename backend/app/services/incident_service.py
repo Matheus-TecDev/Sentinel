@@ -48,7 +48,7 @@ class IncidentService:
             error_message = concrete_error_message(check.error_message)
             if open_incident:
                 data = {"last_error_message": error_message} if error_message is not None else {}
-                incident = self.incidents.update(db, open_incident, data)
+                incident = self.incidents.update_in_transaction(db, open_incident, data)
                 return IncidentTransition(incident=incident, event_type=None)
             unhealthy_count = self.checks.consecutive_unhealthy_count(
                 db,
@@ -57,7 +57,7 @@ class IncidentService:
             )
             if unhealthy_count < self.settings.INCIDENT_FAILURE_THRESHOLD:
                 return None
-            incident = self.incidents.create(
+            incident = self.incidents.create_in_transaction(
                 db,
                 {
                     "service_id": check.service_id,
@@ -70,7 +70,7 @@ class IncidentService:
             return IncidentTransition(incident=incident, event_type=NotificationEventType.INCIDENT_OPENED)
 
         if check.status == HealthStatus.ONLINE and open_incident:
-            return self._resolve_incident(db, open_incident, check.checked_at)
+            return self._resolve_incident_in_transaction(db, open_incident, check.checked_at)
 
         return None
 
@@ -92,6 +92,23 @@ class IncidentService:
         resolved_at: datetime,
     ) -> IncidentTransition:
         incident = self.incidents.update(
+            db,
+            open_incident,
+            {
+                "status": IncidentStatus.RESOLVED,
+                "resolved_at": resolved_at,
+                "duration_seconds": duration_seconds(open_incident.started_at, resolved_at),
+            },
+        )
+        return IncidentTransition(incident=incident, event_type=NotificationEventType.INCIDENT_RESOLVED)
+
+    def _resolve_incident_in_transaction(
+        self,
+        db: Session,
+        open_incident: Incident,
+        resolved_at: datetime,
+    ) -> IncidentTransition:
+        incident = self.incidents.update_in_transaction(
             db,
             open_incident,
             {

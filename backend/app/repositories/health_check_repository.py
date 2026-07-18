@@ -12,7 +12,7 @@ class HealthCheckRepository:
     def create(self, db: Session, data: dict) -> HealthCheckResult:
         result = HealthCheckResult(**data)
         db.add(result)
-        db.commit()
+        db.flush()
         db.refresh(result)
         return result
 

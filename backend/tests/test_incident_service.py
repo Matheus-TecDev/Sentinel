@@ -30,10 +30,16 @@ class FakeIncidentRepository:
         self.items.append(incident)
         return incident
 
+    def create_in_transaction(self, db: object, data: dict) -> Incident:
+        return self.create(db, data)
+
     def update(self, _db: object, incident: Incident, data: dict) -> Incident:
         for key, value in data.items():
             setattr(incident, key, value)
         return incident
+
+    def update_in_transaction(self, db: object, incident: Incident, data: dict) -> Incident:
+        return self.update(db, incident, data)
 
 
 class FakeHealthCheckRepository:
