@@ -127,6 +127,37 @@ class HealthCheckRepository:
         success = db.execute(success_statement).scalar_one()
         return round((success / total) * 100, 2)
 
+    def availability_counts_between(
+        self,
+        db: Session,
+        since: datetime,
+        until: datetime,
+    ) -> list[tuple[int, int, int]]:
+        available_count = func.sum(
+            case((HealthCheckResult.status == HealthStatus.ONLINE, 1), else_=0)
+        )
+        total_count = func.count(HealthCheckResult.id)
+        statement = (
+            select(
+                MonitoredService.id,
+                available_count.label("available_count"),
+                total_count.label("total_count"),
+            )
+            .join(
+                HealthCheckResult,
+                HealthCheckResult.service_id == MonitoredService.id,
+            )
+            .where(
+                HealthCheckResult.checked_at >= since,
+                HealthCheckResult.checked_at <= until,
+            )
+            .group_by(MonitoredService.id)
+        )
+        return [
+            (service_id, int(available), int(total))
+            for service_id, available, total in db.execute(statement).all()
+        ]
+
     def response_extremes(
         self,
         db: Session,
