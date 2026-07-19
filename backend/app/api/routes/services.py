@@ -161,23 +161,23 @@ def service_notifications(
 
 
 @router.put("/{service_id}", response_model=ServiceWithStatus)
-def update_service(
+async def update_service(
     service_id: int,
     payload: ServiceUpdate,
     db: Session = Depends(get_db),
     _: User = Depends(operator_access),
 ) -> ServiceWithStatus:
-    return service_service.update(db, service_id, payload)
+    return await service_service.update(db, service_id, payload)
 
 
 @router.patch("/{service_id}/activation", response_model=ServiceWithStatus)
-def set_service_activation(
+async def set_service_activation(
     service_id: int,
     payload: ServiceActivationUpdate,
     db: Session = Depends(get_db),
     _: User = Depends(operator_access),
 ) -> ServiceWithStatus:
-    return service_service.set_active(db, service_id, payload.is_active)
+    return await service_service.set_active(db, service_id, payload.is_active)
 
 
 @router.get("/{service_id}/checks", response_model=list[HealthCheckResultRead])

@@ -13,6 +13,7 @@ from app.repositories.responsible_repository import ResponsibleRepository
 from app.repositories.service_repository import ServiceRepository
 from app.schemas.service import ServiceCreate, ServiceDetail, ServicePeriodMetrics, ServiceUpdate, ServiceWithStatus
 from app.services.incident_service import IncidentService
+from app.services.notification_service import NotificationService
 
 
 def utc_now() -> datetime:
@@ -43,6 +44,7 @@ class ServiceService:
         self.checks = HealthCheckRepository()
         self.responsibles = ResponsibleRepository()
         self.incidents = IncidentService()
+        self.notifications = NotificationService()
 
     def list(
         self,
@@ -95,25 +97,39 @@ class ServiceService:
         service = self.services.create(db, data)
         return serialize_service_with_status(service)
 
-    def update(self, db: Session, service_id: int, payload: ServiceUpdate) -> ServiceWithStatus:
+    async def update(self, db: Session, service_id: int, payload: ServiceUpdate) -> ServiceWithStatus:
         service = self._get_or_404(db, service_id)
         was_active = service.is_active
         data = payload.model_dump(exclude_unset=True)
         data = self._normalize_responsible(db, data, current_owner=service.owner)
         service = self.services.update(db, service, data)
-        if was_active and service.is_active is False:
-            self.incidents.resolve_open_incident(db, service.id, self.clock())
+        await self._resolve_after_deactivation(db, service, was_active)
         latest = self.checks.latest_by_service(db).get(service.id)
         return serialize_service_with_status(service, latest)
 
-    def set_active(self, db: Session, service_id: int, is_active: bool) -> ServiceWithStatus:
+    async def set_active(self, db: Session, service_id: int, is_active: bool) -> ServiceWithStatus:
         service = self._get_or_404(db, service_id)
         was_active = service.is_active
         service = self.services.update(db, service, {"is_active": is_active})
-        if was_active and service.is_active is False:
-            self.incidents.resolve_open_incident(db, service.id, self.clock())
+        await self._resolve_after_deactivation(db, service, was_active)
         latest = self.checks.latest_by_service(db).get(service.id)
         return serialize_service_with_status(service, latest)
+
+    async def _resolve_after_deactivation(
+        self,
+        db: Session,
+        service: MonitoredService,
+        was_active: bool,
+    ) -> None:
+        if not was_active or service.is_active is not False:
+            return
+        transition = self.incidents.resolve_open_incident(db, service.id, self.clock())
+        if transition and transition.event_type:
+            await self.notifications.notify_incident_event(
+                db,
+                transition.incident,
+                transition.event_type,
+            )
 
     def _get_or_404(self, db: Session, service_id: int) -> MonitoredService:
         service = self.services.get(db, service_id)
