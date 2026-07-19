@@ -14,6 +14,22 @@ jobs:
   backend:
     name: Backend check
     runs-on: ubuntu-latest
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://sentinel_test:sentinel_test_password@localhost:5432/sentinel_test
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: sentinel_test
+          POSTGRES_USER: sentinel_test
+          POSTGRES_PASSWORD: sentinel_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sentinel_test -d sentinel_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     defaults:
       run:
         working-directory: backend
@@ -32,8 +48,11 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements-test.txt
 
-      - name: Run backend tests
-        run: python -m pytest
+      - name: Run backend unit tests
+        run: python -m pytest -m "not integration"
+
+      - name: Run PostgreSQL integration tests
+        run: python -m pytest -m integration
 
       - name: Validar importação da aplicação
         run: |
