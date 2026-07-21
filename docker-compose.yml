@@ -96,6 +96,21 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+      alertmanager:
+        condition: service_started
+    networks:
+      - sentinel_internal
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    expose:
+      - "9093"
+    volumes:
+      - ./infra/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - sentinel_alertmanager_data:/alertmanager
     networks:
       - sentinel_internal
 
@@ -172,6 +187,7 @@ services:
 volumes:
   sentinel_postgres_data:
   sentinel_prometheus_data:
+  sentinel_alertmanager_data:
   sentinel_grafana_data:
   sentinel_loki_data:
 
