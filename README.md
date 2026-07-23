@@ -213,7 +213,7 @@ This remains a demonstrative local environment: HTTP is not terminated with TLS,
 - Email is represented in the data model but SMTP delivery is not implemented.
 - Alertmanager has no external receiver configured.
 - Distributed tracing, token refresh/revocation, MFA, and application-managed TLS are not implemented.
-- The validated frontend build reports a large JavaScript chunk and npm audit warnings; these do not fail the current build.
+- The validated frontend build reports a large JavaScript chunk; this does not fail the current build.
 
 ## Repository structure
 
