@@ -115,7 +115,7 @@ services:
       - sentinel_internal
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    image: ghcr.io/google/cadvisor:0.55.1
     privileged: true
     command:
       - "--docker_only=true"
@@ -138,6 +138,7 @@ services:
     pid: host
     volumes:
       - /:/host:ro
+      - /run/udev/data:/run/udev/data:ro
     expose:
       - "9100"
     networks:
@@ -166,7 +167,7 @@ services:
       - sentinel_internal
 
   grafana:
-    image: grafana/grafana:11.3.1
+    image: grafana/grafana:11.5.0
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
