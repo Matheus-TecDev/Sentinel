@@ -212,7 +212,6 @@ This remains a demonstrative local environment: HTTP is not terminated with TLS,
 - Notification delivery has no queue or transactional outbox; webhook and Discord delivery are post-commit, but delivery retries are not coordinated by a durable worker.
 - Email is represented in the data model but SMTP delivery is not implemented.
 - Alertmanager has no external receiver configured.
-- `INCIDENT_FAILURE_THRESHOLD` is present in `.env.example`, but the current Compose service does not forward it to the backend; Compose therefore uses the backend default of three.
 - Distributed tracing, token refresh/revocation, MFA, and application-managed TLS are not implemented.
 - The validated frontend build reports a large JavaScript chunk and npm audit warnings; these do not fail the current build.
 

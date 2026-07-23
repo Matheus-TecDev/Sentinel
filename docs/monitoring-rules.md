@@ -28,7 +28,7 @@ The outbound metrics counter and duration histogram are recorded only after clas
 
 ## Incident lifecycle
 
-`offline` and `degraded` are unhealthy for incident threshold purposes. The global backend setting `INCIDENT_FAILURE_THRESHOLD` defaults to three. Although it is listed in `.env.example`, the current Compose service does not forward it, so the Compose deployment uses that default.
+`offline` and `degraded` are unhealthy for incident threshold purposes. The global backend setting `INCIDENT_FAILURE_THRESHOLD` is configurable through the Compose environment and defaults to three.
 
 - Before the threshold, an unhealthy result persists without opening an incident.
 - At the threshold, Sentinel opens an incident if none exists.
