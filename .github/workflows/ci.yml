@@ -66,24 +66,16 @@ jobs:
 
   frontend:
     name: Frontend build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Baixar código
-        uses: actions/checkout@v4
-
-      - name: Configurar Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Instalar dependências do frontend
-        working-directory: frontend
-        run: npm ci
-
-      - name: Build do frontend
-        working-directory: frontend
-        run: npm run build
+    uses: Matheus-TecDev/platform-workflows/.github/workflows/react-web-ci.yml@55e78600eda5a676b08227d85c0398f864f8bd3a
+    with:
+      node-version: "20"
+      working-directory: frontend
+      install-command: npm ci
+      lint-command: npm run lint
+      test-command: ""
+      build-command: npm run build
+      artifact-path: dist
+      upload-artifact: false
 
   docker:
     name: Docker build and push
