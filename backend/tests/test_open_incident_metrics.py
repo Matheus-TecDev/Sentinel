@@ -1,5 +1,3 @@
-from collections.abc import Callable
-
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -90,18 +88,14 @@ def test_zero_persisted_open_incidents_exposes_zero() -> None:
 
 
 def test_multiple_persisted_open_incidents_expose_total() -> None:
-    repository = FakeIncidentRepository(
-        [IncidentStatus.OPEN, IncidentStatus.OPEN, IncidentStatus.OPEN]
-    )
+    repository = FakeIncidentRepository([IncidentStatus.OPEN, IncidentStatus.OPEN, IncidentStatus.OPEN])
     registry, _ = make_registry(repository)
 
     assert collect_value(registry) == 3
 
 
 def test_resolved_incidents_are_excluded() -> None:
-    repository = FakeIncidentRepository(
-        [IncidentStatus.OPEN, IncidentStatus.RESOLVED, IncidentStatus.RESOLVED]
-    )
+    repository = FakeIncidentRepository([IncidentStatus.OPEN, IncidentStatus.RESOLVED, IncidentStatus.RESOLVED])
     registry, _ = make_registry(repository)
 
     assert collect_value(registry) == 1
@@ -119,9 +113,7 @@ def test_collection_reflects_repository_state_changes() -> None:
 
 
 def test_database_session_closes_after_successful_collection() -> None:
-    registry, session_factory = make_registry(
-        FakeIncidentRepository([IncidentStatus.OPEN])
-    )
+    registry, session_factory = make_registry(FakeIncidentRepository([IncidentStatus.OPEN]))
 
     assert collect_value(registry) == 1
     assert session_factory.sessions[-1].closed is True
@@ -132,9 +124,7 @@ def test_repository_failure_omits_metric_and_preserves_other_metrics(
 ) -> None:
     session_factory = FakeSessionFactory()
     registry, _ = make_registry(
-        FakeIncidentRepository(
-            error=RuntimeError("postgresql://admin:secret@database/sentinel")
-        ),
+        FakeIncidentRepository(error=RuntimeError("postgresql://admin:secret@database/sentinel")),
         session_factory,
     )
     record_existing_metrics(registry)
@@ -153,9 +143,7 @@ def test_repository_failure_omits_metric_and_preserves_other_metrics(
 def test_session_factory_failure_omits_metric_without_propagating(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    session_factory = FakeSessionFactory(
-        error=RuntimeError("postgresql://admin:secret@database/sentinel")
-    )
+    session_factory = FakeSessionFactory(error=RuntimeError("postgresql://admin:secret@database/sentinel"))
     registry, _ = make_registry(FakeIncidentRepository(), session_factory)
 
     with caplog.at_level("ERROR"):
@@ -173,12 +161,6 @@ def test_existing_health_check_and_api_metrics_remain_registered() -> None:
 
     metric_output = generate_latest(registry).decode()
     assert "sentinel_open_incidents 0.0" in metric_output
-    assert (
-        'sentinel_health_checks_total{service_id="42",status="online"} 1.0'
-        in metric_output
-    )
+    assert 'sentinel_health_checks_total{service_id="42",status="online"} 1.0' in metric_output
     assert "# TYPE sentinel_health_check_duration_seconds histogram" in metric_output
-    assert (
-        'http_requests_total{handler="/health",method="GET",status="200"} 1.0'
-        in metric_output
-    )
+    assert 'http_requests_total{handler="/health",method="GET",status="200"} 1.0' in metric_output

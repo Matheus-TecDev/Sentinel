@@ -1,4 +1,5 @@
-from sqlalchemy import DateTime, Enum as SAEnum, ForeignKey, Index, Integer, String, Text, func, text
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text, func, text
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.enums import IncidentStatus

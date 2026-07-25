@@ -68,10 +68,13 @@ def test_successful_health_check_increments_online_counter() -> None:
     result = run_check(FakeHttpClient(response=httpx.Response(200)), registry)
 
     assert result["status"] == HealthStatus.ONLINE
-    assert registry.get_sample_value(
-        "sentinel_health_checks_total",
-        {"service_id": "42", "status": "online"},
-    ) == 1
+    assert (
+        registry.get_sample_value(
+            "sentinel_health_checks_total",
+            {"service_id": "42", "status": "online"},
+        )
+        == 1
+    )
 
 
 def test_network_failure_increments_offline_counter() -> None:
@@ -86,10 +89,13 @@ def test_network_failure_increments_offline_counter() -> None:
     )
 
     assert result["status"] == HealthStatus.OFFLINE
-    assert registry.get_sample_value(
-        "sentinel_health_checks_total",
-        {"service_id": "42", "status": "offline"},
-    ) == 1
+    assert (
+        registry.get_sample_value(
+            "sentinel_health_checks_total",
+            {"service_id": "42", "status": "offline"},
+        )
+        == 1
+    )
 
 
 def test_slow_health_check_increments_degraded_counter() -> None:
@@ -103,10 +109,13 @@ def test_slow_health_check_increments_degraded_counter() -> None:
     )
 
     assert result["status"] == HealthStatus.DEGRADED
-    assert registry.get_sample_value(
-        "sentinel_health_checks_total",
-        {"service_id": "42", "status": "degraded"},
-    ) == 1
+    assert (
+        registry.get_sample_value(
+            "sentinel_health_checks_total",
+            {"service_id": "42", "status": "degraded"},
+        )
+        == 1
+    )
 
 
 def test_health_check_duration_histogram_observes_seconds() -> None:
@@ -119,12 +128,8 @@ def test_health_check_duration_histogram_observes_seconds() -> None:
     )
 
     labels = {"service_id": "42"}
-    assert registry.get_sample_value(
-        "sentinel_health_check_duration_seconds_count", labels
-    ) == 1
-    assert registry.get_sample_value(
-        "sentinel_health_check_duration_seconds_sum", labels
-    ) == pytest.approx(0.25)
+    assert registry.get_sample_value("sentinel_health_check_duration_seconds_count", labels) == 1
+    assert registry.get_sample_value("sentinel_health_check_duration_seconds_sum", labels) == pytest.approx(0.25)
 
 
 def test_metric_labels_exclude_sensitive_service_and_error_details() -> None:
@@ -136,10 +141,7 @@ def test_metric_labels_exclude_sensitive_service_and_error_details() -> None:
 
     metric_output = generate_latest(registry).decode()
     label_names = {
-        label_name
-        for metric in registry.collect()
-        for sample in metric.samples
-        for label_name in sample.labels
+        label_name for metric in registry.collect() for sample in metric.samples for label_name in sample.labels
     }
     assert label_names - {"le"} == {"service_id", "status"}
     assert "private.example.com" not in metric_output

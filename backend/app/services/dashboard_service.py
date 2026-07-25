@@ -27,7 +27,8 @@ class DashboardService:
         active_items = [item for item in serialized if item.is_active]
         last_24h = period_start("24h")
         incident_counts = {
-            service_id: count for service_id, _name, count in self.incidents.count_by_service_since(db, last_24h, limit=50)
+            service_id: count
+            for service_id, _name, count in self.incidents.count_by_service_since(db, last_24h, limit=50)
         }
         recent_incidents = [
             IncidentWithService.model_validate({**incident.__dict__, "service_name": service_name})

@@ -122,14 +122,10 @@ def test_disabling_active_service_resolves_open_incident() -> None:
     service = make_service()
     incident = make_open_incident()
     resolved_at = incident.started_at + timedelta(minutes=4, seconds=30)
-    service_service, incident_repository, notifications = make_service_service(
-        service, incident, resolved_at
-    )
+    service_service, incident_repository, notifications = make_service_service(service, incident, resolved_at)
     db = FakeSession()
 
-    result = asyncio.run(
-        service_service.update(db, service.id, ServiceUpdate(is_active=False))
-    )
+    result = asyncio.run(service_service.update(db, service.id, ServiceUpdate(is_active=False)))
 
     assert result.is_active is False
     assert incident.status == IncidentStatus.RESOLVED
@@ -145,9 +141,7 @@ def test_disabling_active_service_resolves_open_incident() -> None:
 def test_disabling_service_without_open_incident_does_not_create_one() -> None:
     service = make_service()
     resolved_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
-    service_service, incident_repository, notifications = make_service_service(
-        service, None, resolved_at
-    )
+    service_service, incident_repository, notifications = make_service_service(service, None, resolved_at)
 
     result = asyncio.run(service_service.set_active(FakeSession(), service.id, False))
 
@@ -161,9 +155,7 @@ def test_updating_already_inactive_service_does_not_resolve_incident() -> None:
     service = make_service(is_active=False)
     incident = make_open_incident()
     resolved_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
-    service_service, incident_repository, notifications = make_service_service(
-        service, incident, resolved_at
-    )
+    service_service, incident_repository, notifications = make_service_service(service, incident, resolved_at)
 
     result = asyncio.run(service_service.set_active(FakeSession(), service.id, False))
 
@@ -177,15 +169,9 @@ def test_updating_unrelated_service_field_does_not_affect_incident() -> None:
     service = make_service()
     incident = make_open_incident()
     resolved_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
-    service_service, incident_repository, notifications = make_service_service(
-        service, incident, resolved_at
-    )
+    service_service, incident_repository, notifications = make_service_service(service, incident, resolved_at)
 
-    result = asyncio.run(
-        service_service.update(
-            FakeSession(), service.id, ServiceUpdate(name="Payments Gateway")
-        )
-    )
+    result = asyncio.run(service_service.update(FakeSession(), service.id, ServiceUpdate(name="Payments Gateway")))
 
     assert result.name == "Payments Gateway"
     assert result.is_active is True
@@ -198,9 +184,7 @@ def test_reenabling_service_does_not_affect_incident() -> None:
     service = make_service(is_active=False)
     incident = make_open_incident()
     resolved_at = datetime(2026, 7, 12, 12, 0, tzinfo=timezone.utc)
-    service_service, incident_repository, notifications = make_service_service(
-        service, incident, resolved_at
-    )
+    service_service, incident_repository, notifications = make_service_service(service, incident, resolved_at)
 
     result = asyncio.run(service_service.set_active(FakeSession(), service.id, True))
 
@@ -214,9 +198,7 @@ def test_activation_endpoint_path_sends_recovery_after_resolution() -> None:
     service = make_service()
     incident = make_open_incident()
     resolved_at = incident.started_at + timedelta(minutes=5)
-    service_service, _incident_repository, notifications = make_service_service(
-        service, incident, resolved_at
-    )
+    service_service, _incident_repository, notifications = make_service_service(service, incident, resolved_at)
     db = FakeSession()
 
     result = asyncio.run(service_service.set_active(db, service.id, False))

@@ -12,9 +12,7 @@ class AlertChannelRepository:
 
     def list_for_service(self, db: Session, service_id: int) -> list[AlertChannel]:
         statement = (
-            select(AlertChannel)
-            .where(AlertChannel.service_id == service_id)
-            .order_by(desc(AlertChannel.created_at))
+            select(AlertChannel).where(AlertChannel.service_id == service_id).order_by(desc(AlertChannel.created_at))
         )
         return list(db.execute(statement).scalars().all())
 

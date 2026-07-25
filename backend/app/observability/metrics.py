@@ -114,9 +114,7 @@ class ServiceAvailabilityCollector:
                 try:
                     db.close()
                 except Exception:
-                    logger.warning(
-                        "Failed to close service availability metric database session"
-                    )
+                    logger.warning("Failed to close service availability metric database session")
 
         metric = GaugeMetricFamily(
             "sentinel_service_availability_ratio",

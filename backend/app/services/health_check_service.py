@@ -28,9 +28,7 @@ async def perform_health_check(
         response_time_ms = round((clock() - started_at) * 1000, 2)
         if 200 <= response.status_code <= 399:
             status = (
-                HealthStatus.DEGRADED
-                if response_time_ms > settings.DEGRADED_RESPONSE_TIME_MS
-                else HealthStatus.ONLINE
+                HealthStatus.DEGRADED if response_time_ms > settings.DEGRADED_RESPONSE_TIME_MS else HealthStatus.ONLINE
             )
         else:
             status = HealthStatus.OFFLINE

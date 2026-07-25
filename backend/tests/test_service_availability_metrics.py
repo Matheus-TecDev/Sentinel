@@ -88,16 +88,11 @@ class FakeAvailabilityRepository:
         rows: list[tuple[int, int, int]] = []
         for service_id in sorted(self.service_ids):
             recent_checks = [
-                check
-                for check in self.checks
-                if check.service_id == service_id
-                and since <= check.checked_at <= until
+                check for check in self.checks if check.service_id == service_id and since <= check.checked_at <= until
             ]
             if not recent_checks:
                 continue
-            available = sum(
-                check.status == HealthStatus.ONLINE for check in recent_checks
-            )
+            available = sum(check.status == HealthStatus.ONLINE for check in recent_checks)
             rows.append((service_id, available, len(recent_checks)))
         return rows
 
@@ -288,9 +283,7 @@ def test_repository_failure_omits_availability_and_preserves_other_metrics(
 
 def test_session_factory_failure_does_not_propagate() -> None:
     repository = FakeAvailabilityRepository({1})
-    session_factory = FakeSessionFactory(
-        error=RuntimeError("postgresql://admin:secret@database/sentinel")
-    )
+    session_factory = FakeSessionFactory(error=RuntimeError("postgresql://admin:secret@database/sentinel"))
     registry, _ = make_registry(repository, session_factory)
 
     metric_output = generate_latest(registry).decode()

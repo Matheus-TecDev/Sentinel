@@ -133,9 +133,7 @@ class HealthCheckRepository:
         since: datetime,
         until: datetime,
     ) -> list[tuple[int, int, int]]:
-        available_count = func.sum(
-            case((HealthCheckResult.status == HealthStatus.ONLINE, 1), else_=0)
-        )
+        available_count = func.sum(case((HealthCheckResult.status == HealthStatus.ONLINE, 1), else_=0))
         total_count = func.count(HealthCheckResult.id)
         statement = (
             select(
@@ -154,8 +152,7 @@ class HealthCheckRepository:
             .group_by(MonitoredService.id)
         )
         return [
-            (service_id, int(available), int(total))
-            for service_id, available, total in db.execute(statement).all()
+            (service_id, int(available), int(total)) for service_id, available, total in db.execute(statement).all()
         ]
 
     def response_extremes(
@@ -193,7 +190,9 @@ class HealthCheckRepository:
             statement = statement.where(HealthCheckResult.checked_at >= since)
         return int(db.execute(statement).scalar_one())
 
-    def latest_for_service(self, db: Session, service_id: int, since: datetime | None = None) -> HealthCheckResult | None:
+    def latest_for_service(
+        self, db: Session, service_id: int, since: datetime | None = None
+    ) -> HealthCheckResult | None:
         statement = (
             select(HealthCheckResult)
             .where(HealthCheckResult.service_id == service_id)

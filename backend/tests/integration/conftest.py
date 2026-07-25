@@ -4,12 +4,12 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import Session, sessionmaker
 
+from alembic import command
 from app.core.config import get_settings
 
 SKIP_REASON = "TEST_DATABASE_URL is not set; PostgreSQL integration tests are skipped"
@@ -90,11 +90,7 @@ def integration_session_factory(
 
 
 def truncate_application_tables(engine: Engine) -> None:
-    table_names = [
-        table_name
-        for table_name in inspect(engine).get_table_names()
-        if table_name != "alembic_version"
-    ]
+    table_names = [table_name for table_name in inspect(engine).get_table_names() if table_name != "alembic_version"]
     if not table_names:
         return
     quote = engine.dialect.identifier_preparer.quote

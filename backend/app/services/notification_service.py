@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import httpx
 from sqlalchemy.orm import Session
 
-from app.core.enums import AlertChannelType, HealthStatus, NotificationEventType, NotificationStatus
+from app.core.enums import AlertChannelType, NotificationEventType, NotificationStatus
 from app.models.alert import AlertChannel
 from app.models.incident import Incident
 from app.models.notification import NotificationLog

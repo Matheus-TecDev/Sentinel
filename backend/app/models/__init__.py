@@ -6,4 +6,12 @@ from app.models.responsible import Responsible
 from app.models.service import MonitoredService
 from app.models.user import User
 
-__all__ = ["AlertChannel", "HealthCheckResult", "Incident", "MonitoredService", "NotificationLog", "Responsible", "User"]
+__all__ = [
+    "AlertChannel",
+    "HealthCheckResult",
+    "Incident",
+    "MonitoredService",
+    "NotificationLog",
+    "Responsible",
+    "User",
+]

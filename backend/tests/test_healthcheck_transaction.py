@@ -123,11 +123,7 @@ class FakeIncidentService:
             if self.operation == "resolve"
             else NotificationEventType.INCIDENT_OPENED
         )
-        status = (
-            IncidentStatus.RESOLVED
-            if self.operation == "resolve"
-            else IncidentStatus.OPEN
-        )
+        status = IncidentStatus.RESOLVED if self.operation == "resolve" else IncidentStatus.OPEN
         return IncidentTransition(
             incident=Incident(
                 id=1,
@@ -398,9 +394,7 @@ def test_expected_uniqueness_race_result_is_explicitly_not_created() -> None:
         status=IncidentStatus.OPEN,
         reason="Serviço offline",
     )
-    db = FakeSavepointSession(
-        make_integrity_error("uq_incidents_service_id_open")
-    )
+    db = FakeSavepointSession(make_integrity_error("uq_incidents_service_id_open"))
 
     result = CompetingIncidentRepository(competing).create_in_transaction(
         db,
@@ -453,15 +447,11 @@ def test_simulated_winner_and_loser_produce_exactly_one_notification() -> None:
         notifications,
     )
     assert winner_transition is not None
-    loser_db = FakeSavepointSession(
-        make_integrity_error("uq_incidents_service_id_open")
-    )
+    loser_db = FakeSavepointSession(make_integrity_error("uq_incidents_service_id_open"))
     _loser_check, loser_transition = run_workflow(
         loser_db,
         FakeCheckRepository(),
-        make_incident_service(
-            SequentialRaceIncidentRepository(winner_transition.incident)
-        ),
+        make_incident_service(SequentialRaceIncidentRepository(winner_transition.incident)),
         notifications,
     )
 

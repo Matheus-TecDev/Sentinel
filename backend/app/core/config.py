@@ -22,12 +22,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
-    BACKEND_CORS_ORIGINS: str = (
-        "http://localhost,"
-        "http://127.0.0.1,"
-        "http://localhost:5173,"
-        "http://127.0.0.1:5173"
-    )
+    BACKEND_CORS_ORIGINS: str = "http://localhost,http://127.0.0.1,http://localhost:5173,http://127.0.0.1:5173"
 
     HEALTHCHECK_INTERVAL_SECONDS: int = 60
     HEALTHCHECK_TIMEOUT_SECONDS: float = 5.0
@@ -43,11 +38,7 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        return [
-            origin.strip()
-            for origin in self.BACKEND_CORS_ORIGINS.split(",")
-            if origin.strip()
-        ]
+        return [origin.strip() for origin in self.BACKEND_CORS_ORIGINS.split(",") if origin.strip()]
 
 
 @lru_cache

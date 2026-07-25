@@ -1,7 +1,6 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from threading import Barrier, Lock
 
 import pytest
@@ -149,9 +148,7 @@ def test_successful_health_check_and_incident_commit_together(
     assert transition.event_type == NotificationEventType.INCIDENT_OPENED
     with integration_session_factory() as verification:
         assert persisted_counts(verification) == (1, 1)
-    assert notifications.decisions == [
-        (transition.incident.id, NotificationEventType.INCIDENT_OPENED)
-    ]
+    assert notifications.decisions == [(transition.incident.id, NotificationEventType.INCIDENT_OPENED)]
 
 
 def test_incident_synchronization_failure_rolls_back_health_check(
@@ -283,17 +280,21 @@ def test_concurrent_workers_persist_both_checks_and_one_incident(
         outcomes = [future.result(timeout=15) for future in futures]
 
     with integration_session_factory() as verification:
-        checks = verification.execute(
-            select(HealthCheckResult).where(
-                HealthCheckResult.service_id == service.id
+        checks = (
+            verification.execute(select(HealthCheckResult).where(HealthCheckResult.service_id == service.id))
+            .scalars()
+            .all()
+        )
+        open_incidents = (
+            verification.execute(
+                select(Incident).where(
+                    Incident.service_id == service.id,
+                    Incident.status == IncidentStatus.OPEN,
+                )
             )
-        ).scalars().all()
-        open_incidents = verification.execute(
-            select(Incident).where(
-                Incident.service_id == service.id,
-                Incident.status == IncidentStatus.OPEN,
-            )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
 
     winner = next(outcome for outcome in outcomes if outcome.creation_result.created)
     loser = next(outcome for outcome in outcomes if not outcome.creation_result.created)
@@ -305,6 +306,4 @@ def test_concurrent_workers_persist_both_checks_and_one_incident(
     assert loser.transition is None
     assert loser.creation_result.incident.id == winner.creation_result.incident.id
     assert all(outcome.session_usable for outcome in outcomes)
-    assert notifications.decisions == [
-        (open_incidents[0].id, NotificationEventType.INCIDENT_OPENED)
-    ]
+    assert notifications.decisions == [(open_incidents[0].id, NotificationEventType.INCIDENT_OPENED)]
