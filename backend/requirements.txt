@@ -5,8 +5,8 @@ alembic==1.14.0
 psycopg[binary]==3.2.3
 pydantic==2.10.4
 pydantic-settings==2.7.1
-PyJWT==2.10.1
+PyJWT==2.13.0
 APScheduler==3.11.0
 httpx==0.28.1
-python-multipart==0.0.20
+python-multipart==0.0.30
 prometheus-fastapi-instrumentator==7.0.2
