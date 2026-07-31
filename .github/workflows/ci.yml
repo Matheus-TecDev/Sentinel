@@ -8,7 +8,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   python-ci:
@@ -76,28 +75,3 @@ jobs:
       build-command: npm run build
       artifact-path: dist
       upload-artifact: false
-
-  docker:
-    name: Docker build and push
-    runs-on: ubuntu-latest
-    needs: [python-ci, backend-integration, frontend]
-
-    steps:
-      - name: Baixar código
-        uses: actions/checkout@v4
-
-      - name: Login no GHCR
-        run: echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u matheus-tecdev --password-stdin
-
-      - name: Build e push backend
-        run: |
-          docker build -t ghcr.io/matheus-tecdev/sentinel-backend:1.0.0 ./backend
-          docker push ghcr.io/matheus-tecdev/sentinel-backend:1.0.0
-
-      - name: Build e push frontend
-        run: |
-          docker build -t ghcr.io/matheus-tecdev/sentinel-frontend:1.0.0 ./frontend
-          docker push ghcr.io/matheus-tecdev/sentinel-frontend:1.0.0
-
-      - name: Validar docker-compose
-        run: docker compose config
