@@ -13,7 +13,7 @@ permissions:
 jobs:
   backend:
     name: Backend image
-    uses: Matheus-TecDev/platform-workflows/.github/workflows/docker-publish.yml@729836ae9c9b001051c4f4a46d60ef37f87f5380
+    uses: Matheus-TecDev/platform-workflows/.github/workflows/docker-publish.yml@v1
     with:
       context: ./backend
       dockerfile: ./backend/Dockerfile
@@ -21,7 +21,7 @@ jobs:
 
   frontend:
     name: Frontend image
-    uses: Matheus-TecDev/platform-workflows/.github/workflows/docker-publish.yml@729836ae9c9b001051c4f4a46d60ef37f87f5380
+    uses: Matheus-TecDev/platform-workflows/.github/workflows/docker-publish.yml@v1
     with:
       context: ./frontend
       dockerfile: ./frontend/Dockerfile
