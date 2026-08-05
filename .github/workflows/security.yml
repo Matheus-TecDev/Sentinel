@@ -13,4 +13,4 @@ permissions:
 jobs:
   security:
     name: Reusable security scan
-    uses: Matheus-TecDev/platform-workflows/.github/workflows/security-scan.yml@4741c2c5a01a194a0caa3f066d9433e278173660
+    uses: Matheus-TecDev/platform-workflows/.github/workflows/security-scan.yml@v1

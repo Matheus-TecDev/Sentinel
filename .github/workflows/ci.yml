@@ -12,7 +12,7 @@ permissions:
 jobs:
   python-ci:
     name: Backend quality
-    uses: Matheus-TecDev/platform-workflows/.github/workflows/python-api-ci.yml@b4ec59acecdabe9bc18efe0f0de18b92f2ba49c7
+    uses: Matheus-TecDev/platform-workflows/.github/workflows/python-api-ci.yml@v1
     with:
       python-version: "3.12"
       working-directory: backend
@@ -65,7 +65,7 @@ jobs:
 
   frontend:
     name: Frontend build
-    uses: Matheus-TecDev/platform-workflows/.github/workflows/react-web-ci.yml@55e78600eda5a676b08227d85c0398f864f8bd3a
+    uses: Matheus-TecDev/platform-workflows/.github/workflows/react-web-ci.yml@v1
     with:
       node-version: "20"
       working-directory: frontend
